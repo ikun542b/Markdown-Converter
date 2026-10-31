@@ -6,13 +6,14 @@
 
 ## 当前状态
 
-Phase 0（工具链与最小转换闭环）已完成：
+Phase 0（工具链与最小转换闭环）与 Phase 1（核心模型与基础设施）已完成：
 
 - 解决方案、WinUI 3 应用、Core 类库和 xUnit 测试项目已建立。
 - Pandoc 3.13 与 Typst 0.15.1 已内置在 `resources/engines/win-x64`，运行时不会联网下载。
 - 应用内可检测引擎版本，并执行最小 Markdown → DOCX / PDF 转换。
 - DOCX 已验证包含原生 OMML 公式；PDF 已验证为有效 PDF。
-- 批量队列、内置样式模板、完整设置页、安装包等属于后续阶段，尚未实现。
+- 已建立转换请求/结果/任务/进度模型、三套内置样式定义、配置持久化与迁移、统一错误映射。
+- 批量队列、内置 DOCX/Typst 模板、完整设置页、安装包等属于后续阶段，尚未实现。
 
 ## 环境要求
 
@@ -53,12 +54,14 @@ src/MarkdownDocumentConverter.App/bin/x64/Debug/net10.0-windows10.0.19041.0/win-
 | 项目 | 结果 |
 |---|---|
 | `dotnet build MarkdownDocumentConverter.sln` | 0 警告，0 错误 |
-| `dotnet test` | 7 个测试全部通过 |
+| `dotnet test` | 26 个测试全部通过 |
 | Pandoc 版本 | `pandoc 3.13` |
 | Typst 版本 | `typst 0.15.1 (9dfd3a08)` |
 | DOCX 检查 | ZIP/OOXML 可读，包含 `<m:oMath>`，无 `<w:drawing>` |
 | PDF 检查 | `%PDF-` 文件头，非空，独立于 DOCX 链路 |
 | UI 自动化 | 引擎检测与最小转换按钮均成功执行 |
+
+Phase 1 验证补充：设置 JSON 往返、旧版本迁移、非法值回退、任务状态机、样式目录和错误映射均有单元/集成测试覆盖。用户配置写入 `%APPDATA%/MarkdownDocumentConverter/settings.json`。
 
 转换链路只调用本机 `resources/engines/win-x64` 下的可执行文件，代码中不包含网络请求。物理断网环境的完整验收将在发布阶段按提示词第 23、27 节执行。
 
