@@ -7,6 +7,7 @@
     <RootNamespace>MarkdownDocumentConverter.App</RootNamespace>
     <AssemblyName>MarkdownDocumentConverter.App</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\resources\icons\app.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseWinUI>true</UseWinUI>

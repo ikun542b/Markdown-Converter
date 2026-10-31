@@ -148,6 +148,7 @@ resources/engines/win-x64/              内置 Pandoc、Typst 与校验信息
 resources/docx/                         内置 Word reference.docx 样式模板
 resources/typst/                        内置 PDF Typst 模板
 tools/build-reference-docs.cs           重新生成 Word 样式模板
+tools/build-app-icon.ps1                重新生成应用图标
 scripts/build-release.ps1               发布 + Inno Setup 安装包构建
 installer/windows/                      Inno Setup 脚本与第三方许可证
 tests/fixtures/                         测试用 Markdown 样例

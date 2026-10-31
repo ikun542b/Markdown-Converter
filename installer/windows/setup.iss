@@ -20,6 +20,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=..\..\artifacts\installer
 OutputBaseFilename=MarkdownDocumentConverter-Setup-{#MyAppVersion}
+SetupIconFile=..\..\resources\icons\app.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2
 SolidCompression=yes
