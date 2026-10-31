@@ -22,7 +22,7 @@
 
         <TextBlock
             Grid.Row="1"
-            Text="Phase 0 · 工具链与最小转换闭环验证"
+            Text="开发验证 · 引擎检测与最小转换闭环"
             Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
         <Border

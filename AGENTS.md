@@ -2,7 +2,7 @@
 
 ## Repository state
 
-- Phase 0 is complete: solution, WinUI 3 app, Core library, and xUnit tests exist. Later phases (batch queue, style templates, full settings UI, installer) are not implemented yet.
+- Phases 0–2 are complete: solution, WinUI 3 app, Core library, xUnit tests, and the Word pipeline exist. Later phases (batch queue, Typst templates, full settings UI, installer) are not implemented yet.
 - `resources/engines/win-x64/*.exe` is tracked with Git LFS because Pandoc exceeds GitHub's file-size limit. Run `git lfs install` / `git lfs pull` on a fresh clone; do not delete or re-download the engines.
 - `初始开发参考资源/初始开发提示词.md` is the requirements contract (~1600 lines, Chinese). Read the relevant sections before changing code. If it conflicts with config/scripts, trust the executable source but call out the conflict.
 - Highest-value sections: §4 architecture, §5 layout, §16–18 concurrency/process/temp, §24 resources, §26 tests, §28–29 rules and phases.
@@ -25,6 +25,7 @@
   - `resources/engines/win-x64/typst.exe compile <out.typ> <out.pdf>`
 - Keep upstream license files (`COPYING.rtf`, `COPYRIGHT.txt`, `LICENSE`, `NOTICE`, `MANUAL.html`, `README.md`); they are attribution, not junk.
 - Known harmless warning: Pandoc with `lang: zh-CN` reports missing `translations/zh.yaml` and untranslated Abstract/Table, but exits 0 and output is fine.
+- Word reference docs live in `resources/docx/`; regenerate them with `dotnet run tools/build-reference-docs.cs` after changing template styling. `DocxPostProcessor` applies page size, margins, font/scale, header/footer, and page-number fields at conversion time — Pandoc's `--reference-doc` alone does not supply those.
 
 ## Non-negotiable behavior
 

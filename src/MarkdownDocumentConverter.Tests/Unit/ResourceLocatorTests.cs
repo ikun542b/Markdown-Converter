@@ -15,6 +15,9 @@ public sealed class ResourceLocatorTests
         Assert.True(locator.TryGetEnginePath("typst.exe", out var typstPath));
         Assert.True(File.Exists(pandocPath));
         Assert.True(File.Exists(typstPath));
+        Assert.True(File.Exists(locator.GetDocxTemplatePath("modern")));
+        Assert.True(File.Exists(locator.GetDocxTemplatePath("academic")));
+        Assert.True(File.Exists(locator.GetDocxTemplatePath("minimal")));
     }
 
     [Fact]

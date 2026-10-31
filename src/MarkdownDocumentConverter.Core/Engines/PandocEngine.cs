@@ -45,6 +45,8 @@ public sealed class PandocEngine
         string inputPath,
         string outputPath,
         string? referenceDocPath = null,
+        bool includeTableOfContents = false,
+        string? tableOfContentsTitle = null,
         CancellationToken cancellationToken = default)
     {
         var input = ValidateInput(inputPath);
@@ -62,6 +64,17 @@ public sealed class PandocEngine
         {
             arguments.Add("--reference-doc");
             arguments.Add(Path.GetFullPath(referenceDocPath));
+        }
+
+        if (includeTableOfContents)
+        {
+            arguments.Add("--toc");
+
+            if (!string.IsNullOrWhiteSpace(tableOfContentsTitle))
+            {
+                arguments.Add("--metadata");
+                arguments.Add($"toc-title={tableOfContentsTitle}");
+            }
         }
 
         return _processRunner.RunAsync(

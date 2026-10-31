@@ -8,5 +8,7 @@ public interface IResourceLocator
 
     bool TryGetEnginePath(string fileName, out string path);
 
+    string GetDocxTemplatePath(string styleId);
+
     string GetResourcePath(params string[] relativeParts);
 }
