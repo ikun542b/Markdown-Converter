@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）、Phase 3（PDF 管线）与 Phase 4（WinUI 3 界面）已完成：
+Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）、Phase 3（PDF 管线）、Phase 4（WinUI 3 界面）与 Phase 5（批处理与可靠性）已完成：
 
 - 解决方案、WinUI 3 应用、Core 类库和 xUnit 测试项目已建立。
 - Pandoc 3.13 与 Typst 0.15.1 已内置在 `resources/engines/win-x64`，运行时不会联网下载。
@@ -15,8 +15,9 @@ Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设
 - 已建立转换请求/结果/任务/进度模型、三套内置样式定义、配置持久化与迁移、统一错误映射。
 - Word 管线已支持三套内置 reference.docx、A4/A5、页眉页脚、页码、自动目录（中文标题）、字体与全局字号比例、导航窗格标题层级。
 - PDF 管线已支持三套 Typst 模板、A4/A5、页眉页脚、正文起始页码、目录与 PDF 书签、文档元数据、超链接、脚注、代码块、中文与数学排版。
-- WinUI 3 界面已支持导航、拖放/多选/文件夹添加、转换队列、输出格式/目录/页面/风格/字体/字号比例、进度、取消、重试、结果双击打开、设置页和系统字体枚举。
-- 批量并发调度、完整高级设置、安装包等仍属于后续阶段；当前按文件顺序执行转换。
+- WinUI 3 界面已支持导航、拖放/多选/文件夹添加、转换队列、输出格式/目录/页面/风格/字体/字号比例、进度、取消、逐项/批量重试、结果双击打开、设置页和系统字体枚举。
+- 批量转换支持 1–4 并发、单文件失败隔离、文件夹相对目录保留、可配置超时、日志轮转；已完成 100 个 Markdown 的稳定性测试。
+- 安装包、完整视觉回归和干净离线安装验收仍属于后续阶段。
 
 ## 环境要求
 
@@ -57,7 +58,7 @@ src/MarkdownDocumentConverter.App/bin/x64/Debug/net10.0-windows10.0.19041.0/win-
 | 项目 | 结果 |
 |---|---|
 | `dotnet build MarkdownDocumentConverter.sln` | 0 警告，0 错误 |
-| `dotnet test` | 39 个测试全部通过 |
+| `dotnet test` | 42 个测试全部通过 |
 | Pandoc 版本 | `pandoc 3.13` |
 | Typst 版本 | `typst 0.15.1 (9dfd3a08)` |
 | DOCX 检查 | ZIP/OOXML 可读，包含 `<m:oMath>`，无 `<w:drawing>` |
@@ -87,6 +88,15 @@ Phase 4 验证补充：
 - UI 自动化切换设置页并保存，`%APPDATA%/MarkdownDocumentConverter/settings.json` 写入正确。
 - 界面使用紧凑导航和可滚动窄布局，适配高 DPI 屏幕；转换在后台执行，UI 不阻塞。
 - 仍待人工验收：拖放视觉反馈、不同系统缩放比例、Word 中最终排版效果。
+
+Phase 5 验证补充：
+
+- `BatchService` 使用 `SemaphoreSlim` 限制并发；100 个 Markdown 在 4 并发下全部成功（测试耗时约 7 秒）。
+- 单个文件失败不会中断批次；失败项可单独重试，也可批量重试全部失败/取消项。
+- 文件夹添加会记录相对目录，指定输出目录时保留子目录结构；同名冲突支持自动编号/覆盖/跳过。
+- 每个任务有可配置超时；`ProcessRunner` 取消或超时时终止进程树。
+- 技术日志写入 `%APPDATA%/MarkdownDocumentConverter/logs/app.log`，超过 2 MB 自动轮转，默认保留最近 10 份；不记录 Markdown 正文。
+- 仍待人工验收：真实断网环境、长时间批量运行与 Word/PDF 视觉回归。
 
 转换链路只调用本机 `resources/engines/win-x64` 下的可执行文件，代码中不包含网络请求。物理断网环境的完整验收将在发布阶段按提示词第 23、27 节执行。
 

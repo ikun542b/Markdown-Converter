@@ -95,6 +95,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="90" />
                                     <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Spacing="2">
                                     <TextBlock
@@ -118,6 +119,14 @@
                                     FontSize="12"
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                     Text="{x:Bind SizeText}" />
+                                <Button
+                                    Grid.Column="3"
+                                    Padding="8,2"
+                                    VerticalAlignment="Center"
+                                    Command="{x:Bind RetryCommand}"
+                                    Content="重试"
+                                    FontSize="12"
+                                    Visibility="{x:Bind IsRetryVisible, Mode=OneWay}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>

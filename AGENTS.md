@@ -2,7 +2,7 @@
 
 ## Repository state
 
-- Phases 0–4 are complete: solution, WinUI 3 app, Core library, xUnit tests, Word/PDF pipelines, and the main conversion/settings UI exist. Later phases (concurrent batch scheduling, installer) are not implemented yet; conversion currently runs files sequentially.
+- Phases 0–5 are complete: solution, WinUI 3 app, Core library, xUnit tests, Word/PDF pipelines, conversion/settings UI, and concurrent batch processing with logging/timeouts exist. Phase 6 (visual regression/golden tests) and Phase 7 (installer/offline release verification) remain.
 - `resources/engines/win-x64/*.exe` is tracked with Git LFS because Pandoc exceeds GitHub's file-size limit. Run `git lfs install` / `git lfs pull` on a fresh clone; do not delete or re-download the engines.
 - `初始开发参考资源/初始开发提示词.md` is the requirements contract (~1600 lines, Chinese). Read the relevant sections before changing code. If it conflicts with config/scripts, trust the executable source but call out the conflict.
 - Highest-value sections: §4 architecture, §5 layout, §16–18 concurrency/process/temp, §24 resources, §26 tests, §28–29 rules and phases.
@@ -31,7 +31,7 @@
 ## Application UI
 
 - `AppServices` is the composition root for engines, pipelines, the coordinator, settings, and font enumeration. `MainWindow` creates `ConvertPage` and `SettingsPage` once and swaps them through the compact `NavigationView`.
-- `ConvertViewModel` owns the queue and runs files sequentially through `ConversionCoordinator`; `SettingsViewModel` saves `%APPDATA%/MarkdownDocumentConverter/settings.json` through `SettingsService`.
+- `ConvertViewModel` owns the queue and runs files through `BatchService` (1–4 concurrent jobs); `SettingsViewModel` saves `%APPDATA%/MarkdownDocumentConverter/settings.json` through `SettingsService`. Folder additions retain their relative subdirectories; fixed output directories receive that structure.
 - Picker calls must be initialized with the owning window handle (`WindowNative.GetWindowHandle` + `InitializeWithWindow.Initialize`). Drag/drop and picker handlers stay in the page code-behind; conversion logic stays in ViewModels/Core.
 - The app accepts `.md`/`.markdown` paths on the command line and preloads them into the queue (used for UI automation); no need to click through the picker.
 - System fonts are enumerated with GDI `EnumFontFamiliesEx` in `Services/SystemFontService.cs`; do not add a UI framework dependency just for font enumeration.
@@ -52,7 +52,9 @@
 ## Paths and state
 
 - Temp work per job: `%TEMP%/MDC/<job-id>/`; delete on success.
-- Config and logs: `%APPDATA%/MarkdownDocumentConverter/`; JSON via `System.Text.Json` with `config_version`.
+- Config: `%APPDATA%/MarkdownDocumentConverter/settings.json`; JSON via `System.Text.Json` with `config_version`.
+- Technical logs: `%APPDATA%/MarkdownDocumentConverter/logs/app.log`, rotated at 2 MB (10 files by default). `FileLogger` must stay append-only and must not log Markdown body content.
+- `ConversionRequest.Timeout` drives the per-request linked cancellation/timeout; keep it wired from `AppSettings.ConversionTimeoutSeconds`.
 - Never write user data into the install directory. Locate engines/templates only via `ResourceLocator` / `AppContext.BaseDirectory`, never hard-coded paths. `MDC_RESOURCE_ROOT` can override the resources directory for tests or portable layouts.
 
 ## Build and test

@@ -17,6 +17,7 @@ internal sealed class TestServices
         PdfPipeline = new PdfPipeline(Pandoc, Typst, Locator);
         OutputPathService = new OutputPathService();
         Coordinator = new ConversionCoordinator(WordPipeline, PdfPipeline, OutputPathService);
+        Batch = new BatchService(Coordinator);
     }
 
     public ResourceLocator Locator { get; }
@@ -32,4 +33,6 @@ internal sealed class TestServices
     public OutputPathService OutputPathService { get; }
 
     public ConversionCoordinator Coordinator { get; }
+
+    public BatchService Batch { get; }
 }

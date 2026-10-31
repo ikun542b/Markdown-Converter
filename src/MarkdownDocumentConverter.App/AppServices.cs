@@ -1,6 +1,7 @@
 using MarkdownDocumentConverter.App.Services;
 using MarkdownDocumentConverter.Core.Engines;
 using MarkdownDocumentConverter.Core.Infrastructure;
+using MarkdownDocumentConverter.Core.Logging;
 using MarkdownDocumentConverter.Core.Models;
 using MarkdownDocumentConverter.Core.Pipelines;
 using MarkdownDocumentConverter.Core.Services;
@@ -17,7 +18,9 @@ public sealed class AppServices
         Typst = new TypstEngine(processRunner, Locator);
         WordPipeline = new WordPipeline(Pandoc, Locator);
         PdfPipeline = new PdfPipeline(Pandoc, Typst, Locator);
-        Coordinator = new ConversionCoordinator(WordPipeline, PdfPipeline);
+        Logger = new FileLogger();
+        Coordinator = new ConversionCoordinator(WordPipeline, PdfPipeline, logger: Logger);
+        Batch = new BatchService(Coordinator);
         SettingsService = new SettingsService(new JsonSettingsStore());
         FontService = new SystemFontService();
     }
@@ -33,6 +36,10 @@ public sealed class AppServices
     public PdfPipeline PdfPipeline { get; }
 
     public ConversionCoordinator Coordinator { get; }
+
+    public BatchService Batch { get; }
+
+    public FileLogger Logger { get; }
 
     public SettingsService SettingsService { get; }
 

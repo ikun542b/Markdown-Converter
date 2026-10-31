@@ -17,4 +17,6 @@ public sealed record ConversionRequest
     public double FontScale { get; init; } = 1.0;
 
     public OverwritePolicy OverwritePolicy { get; init; } = OverwritePolicy.Rename;
+
+    public TimeSpan Timeout { get; init; } = TimeSpan.FromMinutes(2);
 }

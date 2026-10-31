@@ -7,16 +7,19 @@ public sealed class FileItemViewModel : ObservableObject
     private ConversionStatus _status = ConversionStatus.Waiting;
     private string? _errorMessage;
 
-    public FileItemViewModel(string inputPath)
+    public FileItemViewModel(string inputPath, string? relativeDirectory = null)
     {
         InputPath = Path.GetFullPath(inputPath);
         FileName = Path.GetFileName(inputPath);
+        RelativeDirectory = relativeDirectory ?? string.Empty;
         SizeText = FormatSize(new FileInfo(inputPath).Length);
     }
 
     public string InputPath { get; }
 
     public string FileName { get; }
+
+    public string RelativeDirectory { get; }
 
     public string Directory => Path.GetDirectoryName(InputPath) ?? string.Empty;
 
@@ -31,6 +34,7 @@ public sealed class FileItemViewModel : ObservableObject
             {
                 OnPropertyChanged(nameof(StatusText));
                 OnPropertyChanged(nameof(IsFinished));
+                OnPropertyChanged(nameof(IsRetryVisible));
             }
         }
     }
@@ -62,7 +66,11 @@ public sealed class FileItemViewModel : ObservableObject
         ConversionStatus.Cancelled or
         ConversionStatus.Skipped;
 
+    public bool IsRetryVisible => Status is ConversionStatus.Failed or ConversionStatus.Cancelled;
+
     public string? LastOutputPath => PdfPath ?? DocxPath;
+
+    public AsyncRelayCommand? RetryCommand { get; set; }
 
     public void MarkRunning()
     {

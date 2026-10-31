@@ -40,7 +40,7 @@ public sealed class ConvertViewModel : ObservableObject
         _selectedFont = FontOptions[0];
         _selectedFontScale = FontScaleOptions.First(option => option.Value == 1.0);
 
-        StartCommand = new AsyncRelayCommand(StartAsync, () => !IsConverting && Files.Count > 0);
+        StartCommand = new AsyncRelayCommand(() => StartAsync(), () => !IsConverting && Files.Count > 0);
         CancelCommand = new RelayCommand(Cancel, () => IsConverting);
         ClearCommand = new RelayCommand(Clear, () => !IsConverting && Files.Count > 0);
         RetryFailedCommand = new AsyncRelayCommand(RetryFailedAsync, () => !IsConverting && HasRetryableFiles());
@@ -187,15 +187,10 @@ public sealed class ConvertViewModel : ObservableObject
                 continue;
             }
 
-            var fullPath = Path.GetFullPath(path);
-
-            if (Files.Any(file => string.Equals(file.InputPath, fullPath, StringComparison.OrdinalIgnoreCase)))
+            if (AddFile(new FileItemViewModel(Path.GetFullPath(path))))
             {
-                continue;
+                added++;
             }
-
-            Files.Add(new FileItemViewModel(fullPath));
-            added++;
         }
 
         if (added > 0)
@@ -217,14 +212,32 @@ public sealed class ConvertViewModel : ObservableObject
         try
         {
             var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+            var root = Path.GetFullPath(folderPath);
 
             var paths = await Task.Run(() =>
-                Directory.EnumerateFiles(folderPath, "*", option)
+                Directory.EnumerateFiles(root, "*", option)
                     .Where(IsMarkdownFile)
                     .OrderBy(path => path, StringComparer.CurrentCultureIgnoreCase)
                     .ToArray());
 
-            var added = AddFiles(paths);
+            var added = 0;
+
+            foreach (var path in paths)
+            {
+                var fullPath = Path.GetFullPath(path);
+                var parent = Path.GetDirectoryName(fullPath) ?? root;
+                var relativeDirectory = Path.GetRelativePath(root, parent);
+
+                if (relativeDirectory == ".")
+                {
+                    relativeDirectory = string.Empty;
+                }
+
+                if (AddFile(new FileItemViewModel(fullPath, relativeDirectory)))
+                {
+                    added++;
+                }
+            }
 
             if (added == 0)
             {
@@ -240,7 +253,7 @@ public sealed class ConvertViewModel : ObservableObject
         }
     }
 
-    public async Task StartAsync()
+    public async Task StartAsync(IReadOnlyList<FileItemViewModel>? requestedTargets = null)
     {
         if (IsConverting)
         {
@@ -265,8 +278,9 @@ public sealed class ConvertViewModel : ObservableObject
             return;
         }
 
-        var targets = Files
-            .Where(file => file.Status is ConversionStatus.Waiting or ConversionStatus.Failed or ConversionStatus.Cancelled)
+        var targets = (requestedTargets ?? Files)
+            .Where(file => requestedTargets is not null
+                || file.Status is ConversionStatus.Waiting or ConversionStatus.Failed or ConversionStatus.Cancelled)
             .ToList();
 
         if (targets.Count == 0)
@@ -288,53 +302,69 @@ public sealed class ConvertViewModel : ObservableObject
         using var cancellation = new CancellationTokenSource();
         _cancellation = cancellation;
 
-        var completed = 0;
         var succeeded = 0;
         var failed = 0;
+        var fileByPath = new Dictionary<string, FileItemViewModel>(StringComparer.OrdinalIgnoreCase);
+        var requests = new List<ConversionRequest>();
+
+        foreach (var file in targets)
+        {
+            var outputDirectory = UseSourceDirectory
+                ? file.Directory
+                : Path.Combine(OutputDirectory, file.RelativeDirectory);
+
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+            {
+                file.MarkFailed("无法确定输出目录。");
+                failed++;
+                continue;
+            }
+
+            fileByPath[file.InputPath] = file;
+            requests.Add(new ConversionRequest
+            {
+                InputPath = file.InputPath,
+                OutputDirectory = outputDirectory,
+                Formats = formats,
+                PageSize = SelectedPageSize.Value,
+                StyleId = SelectedStyle.Value,
+                FontFamily = SelectedFont.Value,
+                FontScale = SelectedFontScale.Value,
+                OverwritePolicy = settings.OverwritePolicy,
+                Timeout = TimeSpan.FromSeconds(settings.ConversionTimeoutSeconds),
+            });
+        }
 
         var progress = new Progress<ConversionProgress>(item =>
         {
+            if (item.Stage is ConversionStage.Word or ConversionStage.Pdf
+                && fileByPath.TryGetValue(item.InputPath, out var current)
+                && current.Status == ConversionStatus.Waiting)
+            {
+                current.MarkRunning();
+            }
+
             ProgressText = $"{item.Message}（{item.CompletedCount}/{item.TotalCount}）";
         });
 
         try
         {
-            foreach (var file in targets)
+            if (requests.Count > 0)
             {
-                cancellation.Token.ThrowIfCancellationRequested();
+                StatusMessage = $"正在转换 {requests.Count} 个文件（并发 {settings.ParallelJobs}）。";
 
-                var outputDirectory = UseSourceDirectory
-                    ? file.Directory
-                    : OutputDirectory;
+                var results = await _services.Batch.ConvertAsync(
+                    requests,
+                    settings.ParallelJobs,
+                    progress,
+                    cancellation.Token);
 
-                if (string.IsNullOrWhiteSpace(outputDirectory))
+                foreach (var result in results)
                 {
-                    file.MarkFailed("无法确定输出目录。");
-                    failed++;
-                    continue;
-                }
-
-                file.MarkRunning();
-                StatusMessage = $"正在转换：{file.FileName}";
-
-                var request = new ConversionRequest
-                {
-                    InputPath = file.InputPath,
-                    OutputDirectory = outputDirectory,
-                    Formats = formats,
-                    PageSize = SelectedPageSize.Value,
-                    StyleId = SelectedStyle.Value,
-                    FontFamily = SelectedFont.Value,
-                    FontScale = SelectedFontScale.Value,
-                    OverwritePolicy = settings.OverwritePolicy,
-                };
-
-                try
-                {
-                    var result = await _services.Coordinator.ConvertAsync(
-                        request,
-                        progress,
-                        cancellation.Token);
+                    if (!fileByPath.TryGetValue(result.InputPath, out var file))
+                    {
+                        continue;
+                    }
 
                     file.ApplyResult(result);
 
@@ -347,24 +377,15 @@ public sealed class ConvertViewModel : ObservableObject
                         failed++;
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    file.MarkCancelled("转换已取消。");
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    file.MarkFailed(ErrorMapper.ToUserError(ex).UserMessage);
-                    failed++;
-                }
-
-                completed++;
-                ProgressValue = completed * 100.0 / targets.Count;
-                ProgressText = $"{completed} / {targets.Count}";
             }
         }
         catch (OperationCanceledException)
         {
+            foreach (var file in fileByPath.Values.Where(file => !file.IsFinished))
+            {
+                file.MarkCancelled("转换已取消。");
+            }
+
             StatusMessage = "转换已取消。";
         }
         finally
@@ -372,15 +393,14 @@ public sealed class ConvertViewModel : ObservableObject
             IsConverting = false;
             _cancellation = null;
 
+            var completed = succeeded + failed;
+            ProgressValue = completed * 100.0 / targets.Count;
+            ProgressText = $"{completed} / {targets.Count}";
+
             var summary = $"完成 {completed} 个文件：成功 {succeeded}，失败 {failed}。";
             StatusMessage = cancellation.IsCancellationRequested
                 ? $"已取消。{summary}"
                 : summary;
-
-            if (completed < targets.Count)
-            {
-                ProgressText = $"{completed} / {targets.Count}";
-            }
 
             if (settings.OpenOutputFolderAfterComplete && succeeded > 0)
             {
@@ -394,6 +414,30 @@ public sealed class ConvertViewModel : ObservableObject
                 }
             }
         }
+    }
+
+    private bool AddFile(FileItemViewModel file)
+    {
+        if (Files.Any(existing =>
+                string.Equals(existing.InputPath, file.InputPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        file.RetryCommand = new AsyncRelayCommand(() => RetrySingleAsync(file));
+        Files.Add(file);
+        return true;
+    }
+
+    private async Task RetrySingleAsync(FileItemViewModel file)
+    {
+        if (IsConverting)
+        {
+            return;
+        }
+
+        file.ResetForRetry();
+        await StartAsync(new[] { file });
     }
 
     public void Clear()
