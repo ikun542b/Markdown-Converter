@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）、Phase 3（PDF 管线）、Phase 4（WinUI 3 界面）、Phase 5（批处理与可靠性）与 Phase 6（Golden 回归）已完成：
+Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）、Phase 3（PDF 管线）、Phase 4（WinUI 3 界面）、Phase 5（批处理与可靠性）、Phase 6（Golden 回归）与 Phase 7（发布与安装包）已完成：
 
 - 解决方案、WinUI 3 应用、Core 类库和 xUnit 测试项目已建立。
 - Pandoc 3.13 与 Typst 0.15.1 已内置在 `resources/engines/win-x64`，运行时不会联网下载。
@@ -18,7 +18,8 @@ Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设
 - WinUI 3 界面已支持导航、拖放/多选/文件夹添加、转换队列、输出格式/目录/页面/风格/字体/字号比例、进度、取消、逐项/批量重试、结果双击打开、设置页和系统字体枚举。
 - 批量转换支持 1–4 并发、单文件失败隔离、文件夹相对目录保留、可配置超时、日志轮转；已完成 100 个 Markdown 的稳定性测试。
 - `tests/Golden` 覆盖基础、学术、数学、中文、表格和长文档六类内容，检查 DOCX OMML/表格结构与 PDF 文本、页码、书签和页数。
-- 安装包、像素级视觉基准和干净离线安装验收仍属于后续阶段；当前视觉检查使用 `tests/Golden/README.md` 的人工清单。
+- 已提供 x64 自包含发布脚本和 Inno Setup 安装包；安装包约 84 MB，发布目录约 448 MB，包含 .NET、Windows App SDK、Pandoc、Typst、模板与许可证文件。
+- 像素级视觉基准、Windows 11 真机和真正断网的干净虚拟机验收仍需人工完成；当前视觉检查使用 `tests/Golden/README.md` 的人工清单。
 
 ## 环境要求
 
@@ -39,6 +40,28 @@ dotnet test src/MarkdownDocumentConverter.Tests/MarkdownDocumentConverter.Tests.
 ```powershell
 dotnet test src/MarkdownDocumentConverter.Tests/MarkdownDocumentConverter.Tests.csproj --filter "FullyQualifiedName~EngineIntegrationTests"
 ```
+
+## 发布与安装包
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-release.ps1
+```
+
+脚本会执行 Release x64 自包含发布、检查关键资源、调用 Inno Setup 编译安装包并输出 SHA-256。安装包输出到：
+
+```text
+artifacts\installer\MarkdownDocumentConverter-Setup-0.1.0.exe
+```
+
+单独发布应用：
+
+```powershell
+dotnet publish src/MarkdownDocumentConverter.App/MarkdownDocumentConverter.App.csproj `
+  -c Release -r win-x64 --self-contained true `
+  -p:WindowsAppSDKSelfContained=true -o publish
+```
+
+注意：`dotnet publish` 默认不会复制 WinUI 生成的 `MarkdownDocumentConverter.App.pri`，项目文件中的 `CopyWinUiPriToPublish` 目标负责复制；缺少该文件会导致发布版启动时 XAML 解析失败。
 
 ## 运行应用
 
@@ -105,6 +128,14 @@ Phase 6 验证补充：
 - 不做像素级快照：字体、Word 版本和 PDF 渲染器会随机器变化，字节级或像素级快照容易产生假失败。
 - 人工视觉检查清单见 `tests/Golden/README.md`，覆盖 A4/A5、目录、页码、页眉页脚、中文、公式、链接、表格、浅色/深色主题和 100%/150%/200% 缩放。
 
+Phase 7 验证补充：
+
+- `dotnet publish -c Release -r win-x64 --self-contained true` 成功；发布目录包含 `resources/engines/win-x64`、`resources/docx`、`resources/typst` 和 `MarkdownDocumentConverter.App.pri`。
+- 在未安装 .NET SDK/Windows App SDK/Pandoc/Typst 的当前 Windows 10 环境运行发布版，完成 Markdown → DOCX/PDF 转换（DOCX 13,413 字节，PDF 71,255 字节）。
+- Inno Setup 6.7.3 静默编译成功；使用 `/CURRENTUSER` 安装后启动、转换、卸载均成功，用户配置保留。
+- 真实 Windows 11、真正断网和干净虚拟机安装仍需在发布验收环境执行。
+- 仓库尚未选择项目自身开源许可证；`installer/windows/THIRD-PARTY-NOTICES.txt` 列出第三方许可证，正式发布前需补项目许可证并加入 `setup.iss` 的 `LicenseFile`。
+
 转换链路只调用本机 `resources/engines/win-x64` 下的可执行文件，代码中不包含网络请求。物理断网环境的完整验收将在发布阶段按提示词第 23、27 节执行。
 
 ## 仓库结构
@@ -117,6 +148,8 @@ resources/engines/win-x64/              内置 Pandoc、Typst 与校验信息
 resources/docx/                         内置 Word reference.docx 样式模板
 resources/typst/                        内置 PDF Typst 模板
 tools/build-reference-docs.cs           重新生成 Word 样式模板
+scripts/build-release.ps1               发布 + Inno Setup 安装包构建
+installer/windows/                      Inno Setup 脚本与第三方许可证
 tests/fixtures/                         测试用 Markdown 样例
 tests/Golden/                           Golden 回归夹具与人工视觉清单
 初始开发参考资源/                        需求合同与界面参考图

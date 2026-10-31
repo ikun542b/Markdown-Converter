@@ -2,7 +2,7 @@
 
 ## Repository state
 
-- Phases 0–6 are complete: solution, WinUI 3 app, Core library, xUnit tests, Word/PDF pipelines, conversion/settings UI, concurrent batch processing, and Golden regression fixtures exist. Phase 7 (installer/offline release verification) remains.
+- Phases 0–7 are complete: solution, WinUI 3 app, Core library, xUnit tests, Word/PDF pipelines, conversion/settings UI, concurrent batch processing, Golden regression fixtures, self-contained publish, and Inno Setup installer all exist.
 - `resources/engines/win-x64/*.exe` is tracked with Git LFS because Pandoc exceeds GitHub's file-size limit. Run `git lfs install` / `git lfs pull` on a fresh clone; do not delete or re-download the engines.
 - `初始开发参考资源/初始开发提示词.md` is the requirements contract (~1600 lines, Chinese). Read the relevant sections before changing code. If it conflicts with config/scripts, trust the executable source but call out the conflict.
 - Highest-value sections: §4 architecture, §5 layout, §16–18 concurrency/process/temp, §24 resources, §26 tests, §28–29 rules and phases.
@@ -65,4 +65,8 @@
 - App executable after build: `src/MarkdownDocumentConverter.App/bin/x64/Debug/net10.0-windows10.0.19041.0/win-x64/MarkdownDocumentConverter.App.exe`
 - Tests are xUnit and must run offline against the vendored engines; do not fetch anything. Integration tests inspect DOCX (OOXML/OMML) and PDF directly — no Word/Office automation.
 - `tests/Golden` is the regression corpus. `GoldenTests` compares structure/extracted text, not pixels; `tests/Golden/README.md` holds the manual visual checklist (A4/A5, TOC/bookmarks, headers/footers, Chinese, math, links, theme, DPI).
+- Release: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-release.ps1` publishes to `publish/`, verifies resources, runs Inno Setup, and prints the installer SHA-256. Output: `artifacts/installer/MarkdownDocumentConverter-Setup-0.1.0.exe`.
+- `dotnet publish` does not copy WinUI's generated `MarkdownDocumentConverter.App.pri`; the App csproj `CopyWinUiPriToPublish` target handles it. Removing that target breaks the published app with a XAML parse error.
+- The app references `Microsoft.WindowsAppSDK.WinUI` + `Microsoft.WindowsAppSDK.Runtime` (not the meta package) to avoid AI/ML payloads. Keep the version aligned if changing it.
+- Inno script supports `/CURRENTUSER` via `PrivilegesRequiredOverridesAllowed=commandline`; use it for non-admin install verification.
 - Spec §28.1 requires `dotnet build` plus affected tests after each change. Work phase by phase per §29; do not generate the whole app in one pass.

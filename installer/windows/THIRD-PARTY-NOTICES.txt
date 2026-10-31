@@ -1,0 +1,36 @@
+Markdown Document Converter - Third-party notices
+=================================================
+
+This application bundles the following third-party components for offline
+document conversion. Full license texts are included in the application's
+resources/engines/win-x64 directory and are installed with the application.
+
+Pandoc 3.13
+  License: GPL-2.0-or-later
+  Project: https://pandoc.org/
+  Files: resources/engines/win-x64/pandoc.exe,
+         resources/engines/win-x64/COPYING.rtf,
+         resources/engines/win-x64/COPYRIGHT.txt
+
+Typst 0.15.1
+  License: Apache-2.0
+  Project: https://typst.app/
+  Files: resources/engines/win-x64/typst.exe,
+         resources/engines/win-x64/LICENSE,
+         resources/engines/win-x64/NOTICE
+
+Microsoft Windows App SDK 2.6.4
+  License: Microsoft Windows App SDK license
+  Project: https://github.com/microsoft/WindowsAppSDK
+
+.NET 10 runtime
+  License: MIT
+  Project: https://github.com/dotnet/runtime
+
+The application does not include Microsoft Word, LibreOffice, or any online
+conversion service. Pandoc's GPL license applies to the bundled Pandoc
+executable and its distribution; consult the bundled Pandoc license files for
+the complete terms.
+
+The project's own source license has not been selected in this repository yet.
+Add the chosen project license and installer license page before public release.

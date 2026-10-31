@@ -16,12 +16,28 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.6.4" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.6.4" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.6.4" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2957" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MarkdownDocumentConverter.Core\MarkdownDocumentConverter.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None
+      Include="..\..\resources\**\*"
+      Link="resources\%(RecursiveDir)%(Filename)%(Extension)"
+      CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- WinUI generates the app .pri after the normal publish item list is evaluated. -->
+  <Target Name="CopyWinUiPriToPublish" AfterTargets="Publish">
+    <Copy
+      SourceFiles="$(TargetDir)$(AssemblyName).pri"
+      DestinationFolder="$(PublishDir)"
+      Condition="Exists('$(TargetDir)$(AssemblyName).pri')" />
+  </Target>
 
 </Project>
