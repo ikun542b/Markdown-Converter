@@ -1,0 +1,62 @@
+<Window
+    x:Class="MarkdownDocumentConverter.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Markdown Document Converter">
+
+    <Grid Padding="32" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            Text="Markdown Document Converter"
+            Style="{StaticResource TitleTextBlockStyle}" />
+
+        <TextBlock
+            Grid.Row="1"
+            Text="Phase 0 · 工具链与最小转换闭环验证"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <Border
+            Grid.Row="2"
+            Padding="20"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock
+                    Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
+                    FontFamily="Consolas"
+                    FontSize="14"
+                    TextWrapping="Wrap"
+                    IsTextSelectionEnabled="True" />
+            </ScrollViewer>
+        </Border>
+
+        <StackPanel
+            Grid.Row="3"
+            Orientation="Horizontal"
+            Spacing="12">
+            <Button
+                Content="检测引擎"
+                Command="{x:Bind ViewModel.DetectEnginesCommand}"
+                Style="{StaticResource AccentButtonStyle}" />
+            <Button
+                Content="运行最小转换"
+                Command="{x:Bind ViewModel.RunSmokeTestCommand}" />
+            <ProgressRing
+                Width="24"
+                Height="24"
+                IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+        </StackPanel>
+    </Grid>
+</Window>

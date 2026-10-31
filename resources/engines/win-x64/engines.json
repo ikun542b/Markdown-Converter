@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-10-31",
+  "platform": "win-x64",
+  "policy": "应用私有资源，随安装包分发；运行时不得联网下载；启动时校验 SHA-256 与版本号",
+  "engines": [
+    {
+      "name": "pandoc",
+      "version": "3.13",
+      "release_channel": "stable",
+      "released_at": "2026-10-26",
+      "file": "pandoc.exe",
+      "sha256": "7ab6244548ba15494fab956230050516fe8f57c36ec2dfb50133719ad3b5a791",
+      "source_url": "https://github.com/jgm/pandoc/releases/download/3.13/pandoc-3.13-windows-x86_64.zip",
+      "archive_sha256": "23e1f2e978a3df80db8bf65c9c59534f41a23140480cfb4f783a882ab7dc6a4e",
+      "license": "GPL-2.0-or-later",
+      "license_files": ["COPYRIGHT.txt", "COPYING.rtf"],
+      "usage": "Markdown -> DOCX (OMML math) ; Markdown -> Typst source"
+    },
+    {
+      "name": "typst",
+      "version": "0.15.1",
+      "build": "9dfd3a08",
+      "release_channel": "stable",
+      "released_at": "2026-07-17",
+      "file": "typst.exe",
+      "sha256": "081217a463adb006f8894b44227fe4b9c9e91fc85f5463d5948e8370db9bb31e",
+      "source_url": "https://github.com/typst/typst/releases/download/v0.15.1/typst-x86_64-pc-windows-msvc.zip",
+      "archive_sha256": "19ce3551153c2fe7ee9fa2f95208310c8f4d3209fedb699e0333faf8913f6736",
+      "license": "Apache-2.0",
+      "license_files": ["LICENSE", "NOTICE"],
+      "usage": "Typst source -> PDF (outline/bookmarks, embedded fonts)"
+    }
+  ],
+  "verification": {
+    "date": "2026-10-31",
+    "offline_required": true,
+    "word_chain": {
+      "command_args": ["<input.md>", "-o", "<output.docx>", "--standalone"],
+      "exit_code": 0,
+      "elapsed_ms": 100,
+      "checks": {
+        "omml_math_m_oMath_count": 4,
+        "heading_style": true,
+        "hyperlink": true,
+        "table": true,
+        "footnote": true,
+        "chinese_text": true,
+        "code_block": true,
+        "task_list_glyph": "U+2610 ballot box + text (pandoc standard DOCX rendering)"
+      }
+    },
+    "pdf_chain": {
+      "steps": [
+        ["<input.md>", "-t", "typst", "-o", "<output.typ>"],
+        ["compile", "<output.typ>", "<output.pdf>"]
+      ],
+      "exit_code": 0,
+      "pdf_header": "%PDF-1.7",
+      "pdf_size_bytes": 51460,
+      "checks": {
+        "outline_bookmarks": true,
+        "flate_streams": true,
+        "producer_is_typst": true,
+        "title_metadata": true,
+        "embedded_cjk_font": "MEGQHK+LiSu",
+        "embedded_math_font": "HDPDHK+NewCMMath-Book",
+        "embedded_monospace_font": "IMADNE+DejaVuSansMono",
+        "tounicode_cmaps": 6,
+        "searchable_text": true
+      }
+    },
+    "known_warnings": [
+      "pandoc 在 lang=zh-CN 时输出 'Could not load translations for zh-CN / translations/zh.yaml' 与 'The term Abstract/Table has no translation defined' 警告，退出码仍为 0，不影响输出，可忽略"
+    ]
+  }
+}
