@@ -10,5 +10,7 @@ public interface IResourceLocator
 
     string GetDocxTemplatePath(string styleId);
 
+    string GetTypstTemplatePath(string styleId);
+
     string GetResourcePath(params string[] relativeParts);
 }

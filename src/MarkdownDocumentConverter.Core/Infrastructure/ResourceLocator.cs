@@ -91,6 +91,33 @@ public sealed class ResourceLocator : IResourceLocator
         return path;
     }
 
+    public string GetTypstTemplatePath(string styleId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(styleId);
+
+        var fileName = styleId + ".typ";
+
+        if (!string.Equals(fileName, Path.GetFileName(fileName), StringComparison.Ordinal))
+        {
+            throw new ResourceNotFoundException($"无效的样式标识：{styleId}");
+        }
+
+        if (_resourceRoot is null)
+        {
+            throw new ResourceNotFoundException(
+                "未找到 resources 目录。请确认应用目录中包含 resources/typst。");
+        }
+
+        var path = Path.Combine(_resourceRoot, "typst", fileName);
+
+        if (!File.Exists(path))
+        {
+            throw new ResourceNotFoundException($"找不到 Typst 样式模板：{path}");
+        }
+
+        return path;
+    }
+
     public string GetResourcePath(params string[] relativeParts)
     {
         ArgumentNullException.ThrowIfNull(relativeParts);

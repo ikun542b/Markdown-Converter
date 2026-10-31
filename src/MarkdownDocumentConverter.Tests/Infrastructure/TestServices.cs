@@ -13,7 +13,7 @@ internal sealed class TestServices
         Pandoc = new PandocEngine(processRunner, Locator);
         Typst = new TypstEngine(processRunner, Locator);
         WordPipeline = new WordPipeline(Pandoc, Locator);
-        PdfPipeline = new PdfPipeline(Pandoc, Typst);
+        PdfPipeline = new PdfPipeline(Pandoc, Typst, Locator);
     }
 
     public ResourceLocator Locator { get; }

@@ -18,6 +18,9 @@ public sealed class ResourceLocatorTests
         Assert.True(File.Exists(locator.GetDocxTemplatePath("modern")));
         Assert.True(File.Exists(locator.GetDocxTemplatePath("academic")));
         Assert.True(File.Exists(locator.GetDocxTemplatePath("minimal")));
+        Assert.True(File.Exists(locator.GetTypstTemplatePath("modern")));
+        Assert.True(File.Exists(locator.GetTypstTemplatePath("academic")));
+        Assert.True(File.Exists(locator.GetTypstTemplatePath("minimal")));
     }
 
     [Fact]

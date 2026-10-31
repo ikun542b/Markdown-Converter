@@ -88,19 +88,36 @@ public sealed class PandocEngine
     public Task<ProcessResult> ConvertToTypstAsync(
         string inputPath,
         string outputPath,
+        string? templatePath = null,
+        bool includeTableOfContents = false,
+        int tableOfContentsDepth = 3,
         CancellationToken cancellationToken = default)
     {
         var input = ValidateInput(inputPath);
         var output = PrepareOutput(outputPath);
 
-        var arguments = new[]
+        var arguments = new List<string>
         {
             input,
             "-t",
             "typst",
             "-o",
             output,
+            "--standalone",
         };
+
+        if (!string.IsNullOrWhiteSpace(templatePath))
+        {
+            arguments.Add("--template");
+            arguments.Add(Path.GetFullPath(templatePath));
+        }
+
+        if (includeTableOfContents)
+        {
+            arguments.Add("--toc");
+            arguments.Add("--toc-depth");
+            arguments.Add(tableOfContentsDepth.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
 
         return _processRunner.RunAsync(
             ExecutablePath,
