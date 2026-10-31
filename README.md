@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）、Phase 3（PDF 管线）、Phase 4（WinUI 3 界面）与 Phase 5（批处理与可靠性）已完成：
+Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）、Phase 3（PDF 管线）、Phase 4（WinUI 3 界面）、Phase 5（批处理与可靠性）与 Phase 6（Golden 回归）已完成：
 
 - 解决方案、WinUI 3 应用、Core 类库和 xUnit 测试项目已建立。
 - Pandoc 3.13 与 Typst 0.15.1 已内置在 `resources/engines/win-x64`，运行时不会联网下载。
@@ -17,7 +17,8 @@ Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设
 - PDF 管线已支持三套 Typst 模板、A4/A5、页眉页脚、正文起始页码、目录与 PDF 书签、文档元数据、超链接、脚注、代码块、中文与数学排版。
 - WinUI 3 界面已支持导航、拖放/多选/文件夹添加、转换队列、输出格式/目录/页面/风格/字体/字号比例、进度、取消、逐项/批量重试、结果双击打开、设置页和系统字体枚举。
 - 批量转换支持 1–4 并发、单文件失败隔离、文件夹相对目录保留、可配置超时、日志轮转；已完成 100 个 Markdown 的稳定性测试。
-- 安装包、完整视觉回归和干净离线安装验收仍属于后续阶段。
+- `tests/Golden` 覆盖基础、学术、数学、中文、表格和长文档六类内容，检查 DOCX OMML/表格结构与 PDF 文本、页码、书签和页数。
+- 安装包、像素级视觉基准和干净离线安装验收仍属于后续阶段；当前视觉检查使用 `tests/Golden/README.md` 的人工清单。
 
 ## 环境要求
 
@@ -58,7 +59,7 @@ src/MarkdownDocumentConverter.App/bin/x64/Debug/net10.0-windows10.0.19041.0/win-
 | 项目 | 结果 |
 |---|---|
 | `dotnet build MarkdownDocumentConverter.sln` | 0 警告，0 错误 |
-| `dotnet test` | 42 个测试全部通过 |
+| `dotnet test` | 48 个测试全部通过 |
 | Pandoc 版本 | `pandoc 3.13` |
 | Typst 版本 | `typst 0.15.1 (9dfd3a08)` |
 | DOCX 检查 | ZIP/OOXML 可读，包含 `<m:oMath>`，无 `<w:drawing>` |
@@ -98,6 +99,12 @@ Phase 5 验证补充：
 - 技术日志写入 `%APPDATA%/MarkdownDocumentConverter/logs/app.log`，超过 2 MB 自动轮转，默认保留最近 10 份；不记录 Markdown 正文。
 - 仍待人工验收：真实断网环境、长时间批量运行与 Word/PDF 视觉回归。
 
+Phase 6 验证补充：
+
+- Golden 回归使用固定输入和固定样式/页面，检查 DOCX 文本、OMML、表格结构，以及 PDF 文本、非空页、书签和最小页数。
+- 不做像素级快照：字体、Word 版本和 PDF 渲染器会随机器变化，字节级或像素级快照容易产生假失败。
+- 人工视觉检查清单见 `tests/Golden/README.md`，覆盖 A4/A5、目录、页码、页眉页脚、中文、公式、链接、表格、浅色/深色主题和 100%/150%/200% 缩放。
+
 转换链路只调用本机 `resources/engines/win-x64` 下的可执行文件，代码中不包含网络请求。物理断网环境的完整验收将在发布阶段按提示词第 23、27 节执行。
 
 ## 仓库结构
@@ -111,6 +118,7 @@ resources/docx/                         内置 Word reference.docx 样式模板
 resources/typst/                        内置 PDF Typst 模板
 tools/build-reference-docs.cs           重新生成 Word 样式模板
 tests/fixtures/                         测试用 Markdown 样例
+tests/Golden/                           Golden 回归夹具与人工视觉清单
 初始开发参考资源/                        需求合同与界面参考图
 ```
 
