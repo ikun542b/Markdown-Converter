@@ -2,7 +2,7 @@
 
 ## Repository state
 
-- Phases 0–3 are complete: solution, WinUI 3 app, Core library, xUnit tests, Word pipeline, and PDF pipeline exist. Later phases (batch queue, full settings UI, installer) are not implemented yet.
+- Phases 0–4 are complete: solution, WinUI 3 app, Core library, xUnit tests, Word/PDF pipelines, and the main conversion/settings UI exist. Later phases (concurrent batch scheduling, installer) are not implemented yet; conversion currently runs files sequentially.
 - `resources/engines/win-x64/*.exe` is tracked with Git LFS because Pandoc exceeds GitHub's file-size limit. Run `git lfs install` / `git lfs pull` on a fresh clone; do not delete or re-download the engines.
 - `初始开发参考资源/初始开发提示词.md` is the requirements contract (~1600 lines, Chinese). Read the relevant sections before changing code. If it conflicts with config/scripts, trust the executable source but call out the conflict.
 - Highest-value sections: §4 architecture, §5 layout, §16–18 concurrency/process/temp, §24 resources, §26 tests, §28–29 rules and phases.
@@ -27,6 +27,15 @@
 - Known harmless warning: Pandoc with `lang: zh-CN` reports missing `translations/zh.yaml` and untranslated Abstract/Table, but exits 0 and output is fine.
 - Word reference docs live in `resources/docx/`; regenerate them with `dotnet run tools/build-reference-docs.cs` after changing template styling. `DocxPostProcessor` applies page size, margins, font/scale, header/footer, and page-number fields at conversion time — Pandoc's `--reference-doc` alone does not supply those.
 - PDF templates live in `resources/typst/`. `TypstTemplateRenderer` replaces `@@...@@` placeholders before Pandoc runs; keep Pandoc's `$...$` syntax intact. Header/footer/page numbering applies only to body pages, and `PdfPipelineTests` verifies Chinese text, TOC/bookmarks, metadata, links, and A5 sizing with PdfPig.
+
+## Application UI
+
+- `AppServices` is the composition root for engines, pipelines, the coordinator, settings, and font enumeration. `MainWindow` creates `ConvertPage` and `SettingsPage` once and swaps them through the compact `NavigationView`.
+- `ConvertViewModel` owns the queue and runs files sequentially through `ConversionCoordinator`; `SettingsViewModel` saves `%APPDATA%/MarkdownDocumentConverter/settings.json` through `SettingsService`.
+- Picker calls must be initialized with the owning window handle (`WindowNative.GetWindowHandle` + `InitializeWithWindow.Initialize`). Drag/drop and picker handlers stay in the page code-behind; conversion logic stays in ViewModels/Core.
+- The app accepts `.md`/`.markdown` paths on the command line and preloads them into the queue (used for UI automation); no need to click through the picker.
+- System fonts are enumerated with GDI `EnumFontFamiliesEx` in `Services/SystemFontService.cs`; do not add a UI framework dependency just for font enumeration.
+- After saving settings, `SettingsChanged` reapplies defaults to the conversion page. Keep new settings wired through `AppSettings`, `SettingsViewModel`, and `ConvertViewModel` together.
 
 ## Non-negotiable behavior
 

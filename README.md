@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）与 Phase 3（PDF 管线）已完成：
+Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设施）、Phase 2（Word 管线）、Phase 3（PDF 管线）与 Phase 4（WinUI 3 界面）已完成：
 
 - 解决方案、WinUI 3 应用、Core 类库和 xUnit 测试项目已建立。
 - Pandoc 3.13 与 Typst 0.15.1 已内置在 `resources/engines/win-x64`，运行时不会联网下载。
@@ -15,7 +15,8 @@ Phase 0（工具链与最小转换闭环）、Phase 1（核心模型与基础设
 - 已建立转换请求/结果/任务/进度模型、三套内置样式定义、配置持久化与迁移、统一错误映射。
 - Word 管线已支持三套内置 reference.docx、A4/A5、页眉页脚、页码、自动目录（中文标题）、字体与全局字号比例、导航窗格标题层级。
 - PDF 管线已支持三套 Typst 模板、A4/A5、页眉页脚、正文起始页码、目录与 PDF 书签、文档元数据、超链接、脚注、代码块、中文与数学排版。
-- 批量队列、完整设置页、安装包等属于后续阶段，尚未实现。
+- WinUI 3 界面已支持导航、拖放/多选/文件夹添加、转换队列、输出格式/目录/页面/风格/字体/字号比例、进度、取消、重试、结果双击打开、设置页和系统字体枚举。
+- 批量并发调度、完整高级设置、安装包等仍属于后续阶段；当前按文件顺序执行转换。
 
 ## 环境要求
 
@@ -56,7 +57,7 @@ src/MarkdownDocumentConverter.App/bin/x64/Debug/net10.0-windows10.0.19041.0/win-
 | 项目 | 结果 |
 |---|---|
 | `dotnet build MarkdownDocumentConverter.sln` | 0 警告，0 错误 |
-| `dotnet test` | 32 个测试全部通过 |
+| `dotnet test` | 39 个测试全部通过 |
 | Pandoc 版本 | `pandoc 3.13` |
 | Typst 版本 | `typst 0.15.1 (9dfd3a08)` |
 | DOCX 检查 | ZIP/OOXML 可读，包含 `<m:oMath>`，无 `<w:drawing>` |
@@ -80,12 +81,19 @@ Phase 3 验证补充：
 - 验证页码从正文页开始，标题页和目录页不显示页码。
 - 三套 Typst 模板分别覆盖现代、学术、简约样式；模板编译失败时会删除不完整输出。
 
+Phase 4 验证补充：
+
+- UI 自动化实际点击“开始转换”，在临时目录生成 `sample.docx`（约 13 KB）与 `sample.pdf`（约 71 KB），队列状态更新为“成功”。
+- UI 自动化切换设置页并保存，`%APPDATA%/MarkdownDocumentConverter/settings.json` 写入正确。
+- 界面使用紧凑导航和可滚动窄布局，适配高 DPI 屏幕；转换在后台执行，UI 不阻塞。
+- 仍待人工验收：拖放视觉反馈、不同系统缩放比例、Word 中最终排版效果。
+
 转换链路只调用本机 `resources/engines/win-x64` 下的可执行文件，代码中不包含网络请求。物理断网环境的完整验收将在发布阶段按提示词第 23、27 节执行。
 
 ## 仓库结构
 
 ```text
-src/MarkdownDocumentConverter.App/      WinUI 3 应用
+src/MarkdownDocumentConverter.App/      WinUI 3 应用（Views / ViewModels / Services）
 src/MarkdownDocumentConverter.Core/     转换核心（不引用 WinUI）
 src/MarkdownDocumentConverter.Tests/    xUnit 单元与集成测试
 resources/engines/win-x64/              内置 Pandoc、Typst 与校验信息

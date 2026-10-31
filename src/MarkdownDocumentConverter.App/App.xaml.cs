@@ -9,6 +9,21 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+        UnhandledException += OnUnhandledException;
+    }
+
+    private static void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+        try
+        {
+            var directory = Path.Combine(Path.GetTempPath(), "MDC");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "crash.log"), e.Exception.ToString());
+        }
+        catch (Exception)
+        {
+            // 记录失败时不再抛出二次异常。
+        }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)

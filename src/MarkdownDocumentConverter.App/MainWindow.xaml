@@ -7,56 +7,34 @@
     mc:Ignorable="d"
     Title="Markdown Document Converter">
 
-    <Grid Padding="32" RowSpacing="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <NavigationView
+        x:Name="Navigation"
+        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+        IsBackButtonVisible="Collapsed"
+        IsPaneOpen="False"
+        IsSettingsVisible="False"
+        Loaded="Navigation_Loaded"
+        PaneDisplayMode="LeftCompact"
+        SelectionChanged="Navigation_SelectionChanged">
+        <NavigationView.MenuItems>
+            <NavigationViewItem x:Name="ConvertNavItem" Content="转换" IsSelected="True" Tag="convert">
+                <NavigationViewItem.Icon>
+                    <SymbolIcon Symbol="Document" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem x:Name="SettingsNavItem" Content="设置" Tag="settings">
+                <NavigationViewItem.Icon>
+                    <SymbolIcon Symbol="Setting" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
 
-        <TextBlock
-            Grid.Row="0"
-            Text="Markdown Document Converter"
-            Style="{StaticResource TitleTextBlockStyle}" />
-
-        <TextBlock
-            Grid.Row="1"
-            Text="开发验证 · 引擎检测与最小转换闭环"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-
-        <Border
-            Grid.Row="2"
-            Padding="20"
-            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="8">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <TextBlock
-                    Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
-                    FontFamily="Consolas"
-                    FontSize="14"
-                    TextWrapping="Wrap"
-                    IsTextSelectionEnabled="True" />
-            </ScrollViewer>
-        </Border>
-
-        <StackPanel
-            Grid.Row="3"
-            Orientation="Horizontal"
-            Spacing="12">
-            <Button
-                Content="检测引擎"
-                Command="{x:Bind ViewModel.DetectEnginesCommand}"
-                Style="{StaticResource AccentButtonStyle}" />
-            <Button
-                Content="运行最小转换"
-                Command="{x:Bind ViewModel.RunSmokeTestCommand}" />
-            <ProgressRing
-                Width="24"
-                Height="24"
-                IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
-        </StackPanel>
-    </Grid>
+        <ContentControl
+            x:Name="ContentHost"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch" />
+    </NavigationView>
 </Window>
